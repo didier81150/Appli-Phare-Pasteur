@@ -1,0 +1,29 @@
+/* Styles de base pour l'application PHARE-2025 */
+
+/* Utilitaires */
+.fade-in {
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Styles pour les tableaux de gestion */
+.data-table {
+    @apply w-full text-left table-auto;
+}
+
+.data-table th {
+    @apply p-3 bg-gray-100 text-gray-600 font-bold uppercase text-sm border-b border-gray-200;
+}
+
+.data-table td {
+    @apply p-3 border-b border-gray-200;
+}
+
+/* Empêcher le clic sur la ligne de déclencher les événements des boutons à l'intérieur */
+.data-table button, .data-table input, .data-table select {
+    pointer-events: auto;
+}
