@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plateforme Anti-Harcèlement</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-gray-100 font-sans">
+
+    <!-- =========== Conteneur Principal de l'Application =========== -->
+    <div id="app" class="container mx-auto p-4">
+
+        <!-- PAGE: Accueil -->
+        <div id="homePage">
+            <div class="bg-white p-8 rounded-xl shadow-lg max-w-2xl mx-auto text-center">
+                <h1 class="text-3xl font-bold text-gray-800 mb-4">Plateforme de lutte contre le harcèlement</h1>
+                <div id="legalInfo" class="text-left text-sm text-gray-600 space-y-2 mb-8">
+                    <p><strong>Rappel à la loi :</strong> Le harcèlement est un délit. Il est défini comme une violence répétée qui peut être verbale, physique ou psychologique...</p>
+                    <p><strong>Numéros d'urgence :</strong> 3020 (Non au harcèlement), 3018 (Cyber-harcèlement), 119 (Enfance en danger).</p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <button id="goToStudentLoginBtn" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-4 rounded-lg">Espace Élève</button>
+                    <button id="goToReferentLoginBtn" class="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-4 rounded-lg">Espace Référant Phare</button>
+                    <button id="goToAdminLoginBtn" class="bg-gray-700 hover:bg-gray-800 text-white font-bold py-3 px-4 rounded-lg">Espace Administrateur</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- PAGE: Connexion Élève -->
+        <div id="studentLoginPage" class="hidden">
+            <div class="bg-white p-8 rounded-xl shadow-lg max-w-md mx-auto mt-10">
+                <h2 class="text-2xl font-bold text-center text-blue-800 mb-6">Espace Élève</h2>
+                
+                <!-- Inscription (première fois) -->
+                <div id="studentRegisterContainer">
+                    <h3 class="font-semibold text-lg mb-4">Première connexion (Inscription)</h3>
+                    <form id="studentRegisterForm" class="space-y-4">
+                        <div>
+                            <label for="registerStudentId" class="block text-sm font-medium text-gray-700">Ton identifiant</label>
+                            <input type="text" id="registerStudentId" required class="w-full mt-1 p-2 border rounded-lg">
+                        </div>
+                        <div>
+                            <label for="registerStudentClass" class="block text-sm font-medium text-gray-700">Ta classe</label>
+                            <select id="registerStudentClass" required class="w-full mt-1 p-2 border rounded-lg">
+                                <!-- Options de classe générées par JS ou statiques -->
+                            </select>
+                        </div>
+                        <div>
+                            <label for="registerTempPassword" class="block text-sm font-medium text-gray-700">Mot de passe provisoire (fourni par le collège)</label>
+                            <input type="password" id="registerTempPassword" required class="w-full mt-1 p-2 border rounded-lg">
+                        </div>
+                        <button type="submit" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg">S'inscrire et créer mon mot de passe</button>
+                    </form>
+                </div>
+
+                <!-- Connexion (utilisateurs déjà inscrits) -->
+                <div id="studentLoginContainer" class="mt-8 pt-6 border-t">
+                     <h3 class="font-semibold text-lg mb-4">Connexion</h3>
+                    <form id="studentLoginForm" class="space-y-4">
+                        <div>
+                            <label for="loginStudentId" class="block text-sm font-medium text-gray-700">Ton identifiant</label>
+                            <input type="text" id="loginStudentId" required class="w-full mt-1 p-2 border rounded-lg">
+                        </div>
+                        <div>
+                            <label for="finalPassword" class="block text-sm font-medium text-gray-700">Ton mot de passe personnel</label>
+                            <input type="password" id="finalPassword" required class="w-full mt-1 p-2 border rounded-lg">
+                        </div>
+                        <button type="submit" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg">Se connecter</button>
+                    </form>
+                </div>
+
+                <!-- Mot de passe perdu -->
+                <div class="mt-6 text-center">
+                    <button id="lostPasswordBtn" class="text-sm text-gray-600 hover:underline">Mot de passe perdu ou nouvel appareil ?</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- PAGE: Signalement Élève -->
+        <div id="studentReportPage" class="hidden">
+            <div class="bg-white p-8 rounded-xl shadow-lg max-w-2xl mx-auto">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-gray-800">Faire un signalement</h2>
+                    <button id="studentLogoutBtn" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg">Déconnexion</button>
+                </div>
+                <form id="reportForm" class="space-y-4">
+                    <div>
+                        <label for="reportType" class="block text-sm font-medium text-gray-700">Type de situation</label>
+                        <select id="reportType" required class="w-full mt-1 p-2 border rounded-lg">
+                            <option value="verbal">Harcèlement verbal</option>
+                            <option value="physical">Harcèlement physique</option>
+                            <option value="cyber">Cyber-harcèlement</option>
+                            <option value="exclusion">Exclusion sociale</option>
+                            <option value="other">Autre</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="reportRole" class="block text-sm font-medium text-gray-700">Je suis...</label>
+                        <select id="reportRole" required class="w-full mt-1 p-2 border rounded-lg">
+                            <option value="victim">Victime</option>
+                            <option value="witness">Témoin</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="reportLocation" class="block text-sm font-medium text-gray-700">Lieu</label>
+                        <input type="text" id="reportLocation" required class="w-full mt-1 p-2 border rounded-lg" placeholder="Ex: cour de récréation, cantine...">
+                    </div>
+                    <div>
+                        <label for="reportDescription" class="block text-sm font-medium text-gray-700">Description détaillée</label>
+                        <textarea id="reportDescription" required rows="5" class="w-full mt-1 p-2 border rounded-lg"></textarea>
+                    </div>
+                    <button type="submit" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg">Envoyer mon signalement</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- PAGE: Connexion Référant -->
+        <div id="referentLoginPage" class="hidden">
+             <div class="bg-white p-8 rounded-xl shadow-lg max-w-sm mx-auto mt-20">
+                <h2 class="text-2xl font-bold text-center text-green-800 mb-6">Connexion Référant Phare</h2>
+                <form id="referentLoginForm">
+                    <div class="mb-4">
+                        <label for="referentPassword" class="block text-gray-700">Mot de passe</label>
+                        <input type="password" id="referentPassword" class="w-full px-4 py-2 mt-2 border rounded-lg focus:outline-none focus:ring-1 focus:ring-green-600" required>
+                    </div>
+                    <div id="referentLoginError" class="text-red-500 text-sm mb-4 hidden"></div>
+                    <button type="submit" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg">Se connecter</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- PAGE: Tableau de Bord Référant -->
+        <div id="referentDashboardPage" class="hidden space-y-8">
+            <div class="bg-white p-6 rounded-xl shadow-lg flex justify-between items-center">
+                <h1 class="text-3xl font-bold text-gray-800">Tableau de Bord - Référant Phare</h1>
+                <button id="referentLogoutBtn" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg">Déconnexion</button>
+            </div>
+
+            <!-- Section Gestion Élèves -->
+            <div class="bg-white p-6 rounded-xl shadow-lg">
+                <h2 class="text-2xl font-bold text-gray-700 mb-4">Gestion des Élèves</h2>
+                <div class="flex space-x-4 mb-4">
+                    <button id="importStudentListBtn" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg">Importer une liste (.xls)</button>
+                    <input type="file" id="studentFileInput" class="hidden" accept=".xls, .xlsx">
+                    <button id="addStudentManualBtn" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg">Ajouter un élève</button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table id="studentListTable" class="data-table">
+                        <thead><tr><th>Identifiant</th><th>Classe</th><th>Mot de passe Provisoire</th><th>Actions</th></tr></thead>
+                        <tbody><!-- Contenu généré par JS --></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Section Signalements -->
+            <div class="bg-white p-6 rounded-xl shadow-lg">
+                <h2 class="text-2xl font-bold text-gray-700 mb-4">Signalements Reçus</h2>
+                <div id="reportsContainer" class="space-y-4">
+                    <!-- Contenu généré par JS -->
+                    <p class="text-gray-500">Aucun signalement pour le moment.</p>
+                </div>
+            </div>
+
+            <!-- Section Configuration Alertes -->
+            <div class="bg-white p-6 rounded-xl shadow-lg">
+                <h2 class="text-2xl font-bold text-gray-700 mb-4">Configuration des Alertes Email</h2>
+                <form id="emailConfigForm" class="space-y-3">
+                    <input type="email" id="email1" placeholder="adresse1@email.com" class="w-full p-2 border rounded-lg">
+                    <input type="email" id="email2" placeholder="adresse2@email.com" class="w-full p-2 border rounded-lg">
+                    <input type="email" id="email3" placeholder="adresse3@email.com" class="w-full p-2 border rounded-lg">
+                    <button type="submit" class="bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-2 px-4 rounded-lg">Enregistrer les emails</button>
+                </form>
+            </div>
+
+            <!-- Section Export -->
+            <div class="bg-white p-6 rounded-xl shadow-lg">
+                <h2 class="text-2xl font-bold text-gray-700 mb-4">Export des Données</h2>
+                <button id="exportPdfBtn" class="bg-purple-500 hover:bg-purple-600 text-white font-bold py-2 px-4 rounded-lg">Exporter tous les signalements (PDF)</button>
+            </div>
+        </div>
+
+        <!-- PAGE: Connexion Administrateur -->
+        <div id="adminLoginPage" class="hidden">
+             <div class="bg-white p-8 rounded-xl shadow-lg max-w-sm mx-auto mt-20">
+                <h2 class="text-2xl font-bold text-center text-gray-800 mb-6">Connexion Administrateur</h2>
+                <form id="adminLoginForm">
+                    <div class="mb-4">
+                        <label for="adminPassword" class="block text-gray-700">Mot de passe</label>
+                        <input type="password" id="adminPassword" class="w-full px-4 py-2 mt-2 border rounded-lg focus:outline-none focus:ring-1 focus:ring-gray-600" required>
+                    </div>
+                    <div id="adminLoginError" class="text-red-500 text-sm mb-4 hidden"></div>
+                    <button type="submit" class="w-full bg-gray-700 hover:bg-gray-800 text-white font-bold py-2 px-4 rounded-lg">Se connecter</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- PAGE: Tableau de Bord Administrateur -->
+        <div id="adminDashboardPage" class="hidden space-y-8">
+            <div class="bg-white p-6 rounded-xl shadow-lg flex justify-between items-center">
+                <h1 class="text-3xl font-bold text-gray-800">Tableau de Bord - Administrateur</h1>
+                <button id="adminLogoutBtn" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg">Déconnexion</button>
+            </div>
+
+            <!-- Section Mot de passe Référant -->
+            <div class="bg-white p-6 rounded-xl shadow-lg">
+                <h2 class="text-2xl font-bold text-gray-700 mb-4">Gérer le mot de passe du Référant Phare</h2>
+                <form id="referentPasswordForm" class="flex items-end space-x-4">
+                    <div>
+                        <label for="newReferentPassword" class="block text-sm font-medium text-gray-700">Nouveau mot de passe</label>
+                        <input type="password" id="newReferentPassword" required class="w-full mt-1 p-2 border rounded-lg">
+                    </div>
+                    <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg">Enregistrer</button>
+                </form>
+            </div>
+
+            <!-- Section Logo -->
+            <div class="bg-white p-6 rounded-xl shadow-lg">
+                <h2 class="text-2xl font-bold text-gray-700 mb-4">Changer le logo de l'établissement</h2>
+                <input type="file" id="logoUploadInput" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-violet-50 file:text-violet-700 hover:file:bg-violet-100"/>
+            </div>
+
+            <!-- Section Reset -->
+            <div class="bg-red-100 p-6 rounded-xl shadow-lg border-l-4 border-red-500">
+                <h2 class="text-2xl font-bold text-red-700 mb-4">Zone de Danger</h2>
+                <button id="appResetBtn" disabled class="w-full bg-red-500 text-white font-bold py-2 px-4 rounded-lg disabled:bg-red-300 disabled:cursor-not-allowed">Réinitialiser l'application</button>
+                <p class="text-sm text-red-600 mt-2">Ce bouton n'est activé qu'après un export PDF des signalements par le Référant.</p>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
