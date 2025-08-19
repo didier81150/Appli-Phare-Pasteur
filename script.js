@@ -128,3 +128,4 @@ document.addEventListener('DOMContentLoaded', () => {
         document.body.innerHTML = "Une erreur critique est survenue. Veuillez contacter le support.";
     }
 });
+u
